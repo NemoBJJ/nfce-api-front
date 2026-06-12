@@ -177,12 +177,21 @@ const EmissaoNfce = () => {
                     <p><strong>Status:</strong> {resultado.status}</p>
                     <p><strong>Chave NFC-e:</strong> {resultado.chaveNfe}</p>
                     <p><strong>Número:</strong> {resultado.numero}</p>
+                    
                     <p>
-                        <strong>DANFE:</strong>{' '}
+                        <strong>DANFE (PDF):</strong>{' '}
                         <a href={`https://homologacao.focusnfe.com.br${resultado.caminhoDanfe}`} target="_blank" rel="noopener noreferrer">
-                            Visualizar DANFE
+                            📄 Visualizar DANFE
                         </a>
                     </p>
+                    
+                    <p>
+                        <strong>XML da Nota:</strong>{' '}
+                        <a href={`https://homologacao.focusnfe.com.br${resultado.caminhoDanfe?.replace('.html', '.xml')}`} target="_blank" rel="noopener noreferrer">
+                            📄 Baixar XML
+                        </a>
+                    </p>
+                    
                     <p>
                         <strong>QR Code:</strong>{' '}
                         <a href={resultado.qrcodeUrl} target="_blank" rel="noopener noreferrer">
