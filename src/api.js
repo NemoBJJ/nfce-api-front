@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isDevelopment =
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1';
 
 const BASE_URL = isDevelopment
-  ? 'http://localhost:8086/api'          // Porta 8086 = NFCe
-  : 'https://nfce-api-ccde.onrender.com/api';  // URL do Render (ping)
+  ? 'http://localhost:8086/api'
+  : 'https://nfce-container.neemindev.com/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
