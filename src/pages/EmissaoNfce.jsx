@@ -20,7 +20,8 @@ const EmissaoNfce = () => {
                 quantidade_comercial: 1,
                 valor_unitario_comercial: 0,
                 valor_unitario_tributavel: 0,
-                icms_situacao_tributaria: '102'
+                icms_situacao_tributaria: '102',
+                icms_origem: '0'
             }
         ]
     });
@@ -29,22 +30,38 @@ const EmissaoNfce = () => {
     const [resultado, setResultado] = useState(null);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
     };
 
     const handleItemChange = (e) => {
         const { name, value } = e.target;
+
+        const valor =
+            name.includes('valor') || name.includes('quantidade')
+                ? parseFloat(value)
+                : value;
+
+        const itemAtualizado = {
+            ...formData.items[0],
+            [name]: valor
+        };
+
+        if (name === 'valor_unitario_comercial') {
+            itemAtualizado.valor_unitario_tributavel = valor;
+        }
+
         setFormData({
             ...formData,
-            items: [{
-                ...formData.items[0],
-                [name]: name.includes('valor') ? parseFloat(value) : value
-            }]
+            items: [itemAtualizado]
         });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         setLoading(true);
         setResultado(null);
 
@@ -52,7 +69,8 @@ const EmissaoNfce = () => {
             const response = await NfceService.emitirNota(1, formData);
             setResultado(response);
         } catch (error) {
-            alert('Erro ao emitir nota. Verifique se o backend está rodando.');
+            console.error('Erro ao emitir NFC-e:', error);
+            alert('Erro ao emitir nota. Verifique o console e o backend.');
         } finally {
             setLoading(false);
         }
@@ -64,6 +82,7 @@ const EmissaoNfce = () => {
 
             <div className="form-section">
                 <h2>Dados da Empresa</h2>
+
                 <form onSubmit={handleSubmit}>
                     <div className="form-row">
                         <div className="form-group">
@@ -77,6 +96,7 @@ const EmissaoNfce = () => {
                                 required
                             />
                         </div>
+
                         <div className="form-group">
                             <label>Natureza da Operação *</label>
                             <input
@@ -90,6 +110,7 @@ const EmissaoNfce = () => {
                     </div>
 
                     <h2>Dados do Produto</h2>
+
                     <div className="form-row">
                         <div className="form-group">
                             <label>Código do Produto *</label>
@@ -102,6 +123,7 @@ const EmissaoNfce = () => {
                                 required
                             />
                         </div>
+
                         <div className="form-group">
                             <label>Descrição *</label>
                             <input
@@ -127,6 +149,7 @@ const EmissaoNfce = () => {
                                 required
                             />
                         </div>
+
                         <div className="form-group">
                             <label>CFOP *</label>
                             <input
@@ -152,6 +175,7 @@ const EmissaoNfce = () => {
                                 required
                             />
                         </div>
+
                         <div className="form-group">
                             <label>Valor Unitário (R$) *</label>
                             <input
@@ -174,39 +198,95 @@ const EmissaoNfce = () => {
             {resultado && resultado.status === 'autorizado' && (
                 <div className="result-section">
                     <h3>✅ Nota Autorizada!</h3>
-                    <p><strong>Status:</strong> {resultado.status}</p>
-                    <p><strong>Chave NFC-e:</strong> {resultado.chaveNfe}</p>
-                    <p><strong>Número:</strong> {resultado.numero}</p>
-                    
+
                     <p>
-                        <strong>DANFE (PDF):</strong>{' '}
-                        <a href={`https://homologacao.focusnfe.com.br${resultado.caminhoDanfe}`} target="_blank" rel="noopener noreferrer">
-                            📄 Visualizar DANFE
-                        </a>
+                        <strong>Status:</strong> {resultado.status}
                     </p>
-                    
+
                     <p>
-                        <strong>XML da Nota:</strong>{' '}
-                        <a href={`https://homologacao.focusnfe.com.br${resultado.caminhoDanfe?.replace('.html', '.xml')}`} target="_blank" rel="noopener noreferrer">
-                            📄 Baixar XML
-                        </a>
+                        <strong>Chave NFC-e:</strong> {resultado.chaveNfe}
                     </p>
-                    
+
                     <p>
-                        <strong>QR Code:</strong>{' '}
-                        <a href={resultado.qrcodeUrl} target="_blank" rel="noopener noreferrer">
-                            Consultar na SEFAZ
-                        </a>
+                        <strong>Número:</strong> {resultado.numero}
                     </p>
+
+                    {resultado.caminhoDanfe && (
+                        <p>
+                            <strong>DANFE:</strong>{' '}
+                            <a
+                                href={`https://homologacao.focusnfe.com.br${resultado.caminhoDanfe}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                📄 Visualizar DANFE
+                            </a>
+                        </p>
+                    )}
+
+                    {resultado.caminhoDanfe && (
+                        <p>
+                            <strong>XML da Nota:</strong>{' '}
+                            <a
+                                href={`https://homologacao.focusnfe.com.br${resultado.caminhoDanfe.replace(
+                                    '.html',
+                                    '.xml'
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                📄 Baixar XML
+                            </a>
+                        </p>
+                    )}
+
+                    {resultado.qrcodeUrl && (
+                        <p>
+                            <strong>QR Code:</strong>{' '}
+                            <a
+                                href={resultado.qrcodeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Consultar na SEFAZ
+                            </a>
+                        </p>
+                    )}
                 </div>
             )}
 
             {resultado && resultado.status === 'processando_autorizacao' && (
                 <div className="result-section">
                     <h3>⏳ Nota em Processamento</h3>
-                    <p>A nota foi enviada e está aguardando autorização da SEFAZ.</p>
+                    <p>
+                        A nota foi enviada e está aguardando autorização da SEFAZ.
+                    </p>
                 </div>
             )}
+
+            {resultado &&
+                resultado.status !== 'autorizado' &&
+                resultado.status !== 'processando_autorizacao' && (
+                    <div className="result-section">
+                        <h3>Erro na emissão</h3>
+
+                        <p>
+                            <strong>Status:</strong> {resultado.status}
+                        </p>
+
+                        {resultado.mensagemSefaz && (
+                            <p>
+                                <strong>SEFAZ:</strong> {resultado.mensagemSefaz}
+                            </p>
+                        )}
+
+                        {resultado.mensagemErro && (
+                            <p>
+                                <strong>Erro:</strong> {resultado.mensagemErro}
+                            </p>
+                        )}
+                    </div>
+                )}
         </div>
     );
 };
